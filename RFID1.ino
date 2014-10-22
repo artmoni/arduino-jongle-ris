@@ -1,9 +1,12 @@
 #include <SoftwareSerial.h>
+#include "Costume.h"
+
 SoftwareSerial RFID(2, 3); // RX and TX
 
 #define MAX_AUTHORIZED_KEYS 100
 #define RFID_LENGHT 14
 
+Costume costume(13);
 
 int data1 = 0;
 int ok = -1;
@@ -14,7 +17,7 @@ int PIN_GREEN = 12;
 int PIN_BLUE = 11;
 
 String currentID="";
-int buttonState=0;
+
 
 // use first sketch in http://wp.me/p3LK05-3Gk to get your tag numbers
 int newtag[14] = { 
@@ -140,7 +143,7 @@ void readTags()
     ok = -1;
   }
 
-  if (is_register||buttonState == HIGH){
+  if (is_register){
     digitalWrite(PIN_GREEN, HIGH);
     digitalWrite(PIN_RED, HIGH);
     delay(500);
@@ -153,8 +156,6 @@ void readTags()
 
 void loop()
 {
-  buttonState = digitalRead(PIN_BUTTON);
-      //Serial.println(buttonState);
 
   readTags();
 }
