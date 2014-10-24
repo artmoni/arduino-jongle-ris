@@ -28,7 +28,7 @@ class Costume
     Costume(int pin);
     void lightShoulder(int color);
     void lightButton();
-    void sendRFID(String rfid);
+    
   private:
     int _pin;
 };

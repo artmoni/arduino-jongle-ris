@@ -8,19 +8,25 @@
  * 15 for Wiring S) on the other board.
  */
 
+#include "XBee.h"
+
 // digital pin to attach the switch
 int WLED = 8;
 
 // variable to store the data received
 int data;
 
+XBee xbee = XBee();
+
 void setup()
 {
   // Starts serial communication
   Serial.begin(9600);
+  xbee.setSerial(Serial);
+
   // set pin as output
   pinMode(WLED, OUTPUT);
-digitalWrite(WLED, LOW);
+  
 }
 
 void loop()
@@ -30,7 +36,8 @@ void loop()
   // send the character 'a' though the xBee
 
   Serial.print('e');
-  
+
+
 
   // if data available
   if (Serial.available())
@@ -56,4 +63,5 @@ void loop()
   // wait 100ms
   delay(100);
 }
+
 

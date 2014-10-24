@@ -45,15 +45,6 @@ void Costume::lightButton()
   delay(250);
 }
 
-void Costume::sendRFID(String rfid){
-  Serial.print(rfid);
-
-}
-
-
-
-
-
 
 
 

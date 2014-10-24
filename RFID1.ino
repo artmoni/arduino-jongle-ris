@@ -156,7 +156,8 @@ void readTags()
 
 void loop()
 {
-
+costume.lightShoulder(COLOR_GREEN);
+costume.sendRFID("toto");
   readTags();
 }
 
