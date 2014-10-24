@@ -1,3 +1,0 @@
-GalacticServer   KEYWORD1
-getPassengers    KEYWORD2
-endConnection     KEYWORD2

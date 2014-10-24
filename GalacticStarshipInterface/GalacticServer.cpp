@@ -60,7 +60,7 @@ void GalacticServer::endConnection()
 
     // do nothing forevermore:
     //while(true);
-    delay(5000);
+    //delay(5000);
   }
 }
 
@@ -82,19 +82,59 @@ String GalacticServer::getPassengers()
 
 String GalacticServer::getPassenger(String rfid){
   startConnection("/passenger/"+rfid);
-  String passengerJSON="";
+  String passengerJSON;
   // if there are incoming bytes available
   // from the server, read them and print them:
-  while (client.available()) {
-    char c = client.read();
-    passengerJSON= String(passengerJSON+c);
-  }  
+  int connectLoop = 0;
+  boolean startRead=false;
+  while(client.connected())
+  {
+    while (client.available()) {
+      char c = client.read();
+      //Serial.print(c);
+      if (c == '{' ) { //'<' is our begining character
+        startRead = true; //Ready to start reading the part 
+       // passengerJSON= String(passengerJSON+'"');
+        passengerJSON= String(passengerJSON+c);
+        
+      }
+      else if(startRead){
+
+        //if(c != '}'){
+         // if (c=='"')
+           //passengerJSON= String(passengerJSON+"\\");
+          passengerJSON= String(passengerJSON+c);
+        //}
+        //if (c=='}')
+//        passengerJSON= String(passengerJSON+'"');
+
+      }
+      connectLoop = 0;  
+    }  
+
+    connectLoop++;
+
+    // if more than 10000 milliseconds since the last packet
+    if(connectLoop > 10000)
+    {
+      // then close the connection from this end.
+      Serial.println();
+      Serial.println(F("Timeout"));
+      client.stop();
+    }
+    // this is a delay for the connectLoop timing
+    delay(1);
+  }
+
 
   if (DEBUG)
     Serial.println(passengerJSON);
   endConnection();
   return passengerJSON;
 }
+
+
+
 
 
 
