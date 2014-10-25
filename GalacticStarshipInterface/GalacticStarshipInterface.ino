@@ -8,7 +8,8 @@
 #include "GalacticServer.h"
 #include "Costume.h"
 #include "Passenger.h"
-
+#include <SoftwareSerial.h>
+//SoftwareSerial console(2, 3);
 
 using namespace ArduinoJson::Parser;
 
@@ -18,50 +19,48 @@ JsonParser<32> parser;
 
 void setup() {
   Serial.begin(9600);
-  //xbee.begin(Serial);
+  // console.begin(Serial);
 
   starship.initConnection();
 }
 
+String scannedRFID="";
 void loop()
 {
-  String rfid="";
+  
+  //console.println("--------------------------");
 
-  //getPassengers();
+  if (Serial.available())
+  {scannedRFID="";
+    scannedRFID=Serial.readString();
+  }
 
-  rfid="12098HJ";
-  Passenger passenger;
-  passenger= getPassenger(rfid);
-  if (passenger.isGolden()==1){
-    Serial.println(rfid+" Bienvenue "+ passenger.getFirstname());
-  }
-  else{
-    Serial.println(rfid+" Seconde classe");
-  }
-  delay(1000);
+  if (scannedRFID != "")
 
-  rfid="sdsd";
-  passenger= getPassenger(rfid);
-  if (passenger.isGolden()==1){
-    Serial.println(rfid+" Bienvenue "+ passenger.getFirstname());
-  }
-  else{
-    Serial.println(rfid+" Seconde classe");
-  }
-  delay(1000);
+  {    Serial.flush();
+    Serial.println("RFID1="+scannedRFID);
 
-  rfid="KO";
-  passenger= getPassenger(rfid);
-  if (passenger.isGolden()==1){
-    Serial.println(rfid+" Bienvenue "+ passenger.getFirstname());
+
+    Passenger passenger;
+    passenger= getPassenger(scannedRFID);
+     if (passenger.isGolden()==1){
+      Serial.println(scannedRFID+" Bienvenue "+ passenger.getFirstname());
+    }
+    else{
+      Serial.println(scannedRFID+" Seconde classe");
+    }
+    delay(2000);
+    scannedRFID="";
   }
-  else{
-    Serial.println(rfid+" Seconde classe");
-  }
-  delay(1000);
+
+
+
+
 
 
 }
+
+
 
 String getPassengers(){
   String json;
@@ -83,7 +82,7 @@ Passenger getPassenger(String rfidToCheck){
   Passenger passenger;
   String json;
   json=  starship.getPassenger(rfidToCheck);
-
+ 
   //char json[]="{\"error\":false,\"rfid\":\"qsdsqd\",\"firstname\":\"ssss\",\"lastname\":\"fleudry\",\"check_count\":0,\"is_golden\":1}";
 
   //char *json='{"error":false,"rfid":"12098HJ","firstname":"seb","lastname":"fleury","check_count":2,"is_golden":1}';
@@ -92,7 +91,6 @@ Passenger getPassenger(String rfidToCheck){
   char parseJson[json.length()+1];
 
   json.toCharArray(parseJson,json.length()+1);
-  Serial.println(String(json.length())+"====>>"+parseJson);
   JsonObject root = parser.parse(parseJson);
   if (!root.success())
   {
@@ -112,6 +110,10 @@ Passenger getPassenger(String rfidToCheck){
 
   return passenger;
 }
+
+
+
+
 
 
 

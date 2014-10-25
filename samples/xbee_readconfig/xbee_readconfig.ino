@@ -21,7 +21,7 @@ void loop()
     bOK = true;
   }
 
-  
+
   if(bOK)
   {
     displayXbeeConfig();
@@ -55,22 +55,32 @@ void displayXbeeConfig(){
   Serial.println();
   Serial.println("ATSL");
   readXbee();
+  
+  // Serial.println("The serial number of the XBee module (HIGH 32bits)");
+  Serial.println();
+  Serial.println("ATDH");
+  readXbee();
+  
+  // Serial.println("The serial number of the XBee module (HIGH 32bits)");
+  Serial.println();
+  Serial.println("ATDL");
+  readXbee();
 
   //Serial.println(" The 16-bit address of the module. ");
   Serial.println();
   Serial.println("ATMY");
   readXbee();
 
-/*
+  /*
 0 (1200 bps)
-1 (2400 bps)
-2 (4800 bps)
-3 (9600 bps)
-4 (19200 bps)
-5 (38400 bps)
-6 (57600 bps)
-7 (115200 bps) 
-*/
+   1 (2400 bps)
+   2 (4800 bps)
+   3 (9600 bps)
+   4 (19200 bps)
+   5 (38400 bps)
+   6 (57600 bps)
+   7 (115200 bps) 
+   */
   //Serial.println("The baud rate used for serial communication with the Arduino board or computer");
   Serial.println();
   Serial.println("ATBD");
@@ -92,6 +102,7 @@ void readXbee(){
 
   }
 }
+
 
 
 

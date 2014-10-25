@@ -12,7 +12,7 @@
 int WLED = 8;
 
 // variable to store the data received
-int data;
+char data;
 
 void setup()
 {
@@ -26,11 +26,15 @@ digitalWrite(WLED, LOW);
 void loop()
 {
   // if the switch is pressed
-  delay(1000);
+  
   // send the character 'a' though the xBee
 
-  Serial.print('e');
+  Serial.print("6611318006743110");
   
+  delay(2000);
+  Serial.flush();
+  
+  //Serial.write("6611318006743110");
 
   // if data available
   if (Serial.available())
@@ -43,17 +47,17 @@ void loop()
     {
       // turn ON the board LED
       digitalWrite(WLED, HIGH);
-      Serial.print("turn ON");
+      //Serial.print("turn ON");
     }
     else
     {
       // if not turn if OFF
       digitalWrite(WLED, LOW);
-      Serial.print("turn OFF");
+      //Serial.print(String(data));
     }
   }
 
   // wait 100ms
-  delay(100);
+  delay(1000);
 }
 

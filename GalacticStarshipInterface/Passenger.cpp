@@ -4,7 +4,6 @@
 Passenger::Passenger(){
 }
 void Passenger::setFirstname(String name){
-  Serial.println(">>> getFirstname="+name);
   this->firstname=name;
 }
 void Passenger::setLastname(String lastname){
@@ -21,7 +20,6 @@ short Passenger::isGolden(){
 }
 
 String Passenger::getFirstname(){
-  Serial.println(">>> getFirstname="+this->firstname);
   return this->firstname;
 }
 

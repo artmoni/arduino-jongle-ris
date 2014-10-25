@@ -57,6 +57,7 @@ void GalacticServer::endConnection()
     Serial.println();
     Serial.println("disconnecting.");
     client.stop();
+    client.flush();
 
     // do nothing forevermore:
     //while(true);
