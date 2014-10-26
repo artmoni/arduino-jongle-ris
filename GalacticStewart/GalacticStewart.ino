@@ -1,3 +1,5 @@
+#include "Rfid.h"
+
 #include <Costume.h>
 
 #include <SoftwareSerial.h>
@@ -10,12 +12,12 @@
 // initialize the library with the numbers of the interface pins
 LiquidCrystal lcd(11, 10,7,6, 5,4);
 
-SoftwareSerial RFID(2, 3); // RX and TX
 
 #define MAX_AUTHORIZED_KEYS 100
 #define RFID_LENGHT 14
 
 Costume costume(13);
+Rfid leftHand;
 
 int data1 = 0;
 char dataRFID=0;
@@ -39,7 +41,6 @@ boolean is_register=false;
 
 void setup()
 {
-  RFID.begin(9600);    // start serial to RFID reader
   Serial.begin(9600);  // start serial to PC 
   pinMode(PIN_RED, OUTPUT); // for status LEDs
   pinMode(PIN_GREEN, OUTPUT);
@@ -105,142 +106,11 @@ void checkmytags() // compares each tag against the tag just read
   }
 }
 
-unsigned long hexToDec(String hexString) {
-  long decValue = 0;
-  int nextInt;
-  for (int i = 0; i < hexString.length(); i++) {
-    nextInt = int(hexString.charAt(i));
-
-    if (nextInt >= 48 && nextInt <= 57) nextInt = map(nextInt, 48, 57, 0, 9);
-    if (nextInt >= 65 && nextInt <= 70) nextInt = map(nextInt, 65, 70, 10, 15);
-    if (nextInt >= 97 && nextInt <= 102) nextInt = map(nextInt, 97, 102, 10, 15);
-    nextInt = constrain(nextInt, 0, 15);
-    decValue = (decValue * 16) + nextInt;
-  }
-
-  return decValue;
-}
-
-String decToHex(byte decValue, byte desiredStringLength) {
-  String hexString = String(decValue, HEX);
-  while (hexString.length() < desiredStringLength) hexString = "0" + hexString;
-  return hexString;
-}
-
-long readTags2(){
-  byte i = 0;
-  byte val = 0;
-  byte code[6];
-  byte checksum = 0;
-  byte bytesread = 0;
-  byte tempbyte = 0;
-  long rfidID=0;
-
-  if(RFID.available() > 0) {
 
 
-    if((val = RFID.read()) == 2) {                  // check for header 
-
-
-
-      bytesread = 0; 
-      while (bytesread < 12) {                        // read 10 digit code + 2 digit checksum
-        //        Serial.println("read 10 digit code: ");
-
-        if( RFID.available() > 0) { 
-          val = RFID.read();
-          if((val == 0x0D)||(val == 0x0A)||(val == 0x03)||(val == 0x02)) { // if header or stop bytes before the 10 digit reading 
-            break;                                    // stop reading
-          }
-          //Serial.print(val);
-          // Do Ascii/Hex conversion:
-          if ((val >= '0') && (val <= '9')) {
-            val = val - '0';
-          } 
-          else if ((val >= 'A') && (val <= 'F')) {
-            val = 10 + val - 'A';
-          }
-
-          // Every two hex-digits, add byte to code:
-          if (bytesread & 1 == 1) {
-            // make some space for this hex-digit by
-            // shifting the previous hex-digit with 4 bits to the left:
-            code[bytesread >> 1] = (val | (tempbyte << 4));
-
-            if (bytesread >> 1 != 5) {                // If we're at the checksum byte,
-              checksum ^= code[bytesread >> 1];       // Calculate the checksum... (XOR)
-            };
-          } 
-          else {
-            tempbyte = val;                           // Store the first hex digit first...
-          };
-
-          bytesread++;                                // ready to read next digit
-        } 
-      } 
-
-      // Output to Serial:
-      String monCode="";
-      if (bytesread == 12) {                          // if 12 digit read is complete
-        // Serial.print("5-byte code: ");
-        for (i=2; i<5; i++) {
-          monCode=monCode+decToHex(code[i],2);
-          if (code[i] < 16) Serial.print("0");
-          // Serial.print(code[i], HEX);
-          //Serial.print("("+String(decToHex(code[i],2))+")");          
-          //Serial.print(" ");
-        }
-
-        rfidID = hexToDec(monCode);
-        //Serial.println("le code est=>"+String(rfidID));
-
-        // Serial.print("Checksum: ");
-        //Serial.print(code[5], HEX);
-        //Serial.println(code[5] == checksum ? " -- passed." : " -- error.");
-        // Serial.println();
-      }
-
-      bytesread = 0;
-      Serial.print(String(rfidID));
-    }
-  }
-  return rfidID;
-}
 void readTags()
 {
   ok = -1;
-
-/*
-
-  if (RFID.available() > 0) 
-  {
-    currentID="";
-    // read tag numbers
-    delay(50); // needed to allow time for the data to come in from the serial buffer.
-
-    Serial.println(dataRFID);
-    for (int z = 0 ; z < RFID_LENGHT ; z++) // read the rest of the tag
-    {
-
-      data1=RFID.read();
-      //data1 = RFID.read();
-      newtag[z] = data1;
-      currentID+=data1;
-
-    }
-
-    if (currentID.compareTo(master_key)==0)
-      is_register=!is_register;
-
-    Serial.print(currentID);
-    delay(2000);
-    Serial.flush(); // stops multiple reads
-
-    // do the tags match up?  
-    // checkmytags();
-  }
-*/
-readTags2();
 
   String code="";
   String name ="";
@@ -286,9 +156,11 @@ readTags2();
 
 void loop()
 {
+  long passengerID=0;
   costume.lightShoulder(COLOR_GREEN);
-  //costume.sendRFID("toto");
-  readTags();
+  passengerID=leftHand.readRFID();
+  if (passengerID!=0)
+    Serial.print(String(passengerID));
 }
 
 
@@ -325,6 +197,7 @@ void displayStatusOK(String name, String description){
   lcd.print(description);
   resetStatusControl();
 }
+
 
 
 
