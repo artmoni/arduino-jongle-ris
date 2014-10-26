@@ -19,7 +19,7 @@ private:
  String rfid;
  String lastname;
  String firstname;
- boolean is_golden;
+ short is_golden;
  
  
 

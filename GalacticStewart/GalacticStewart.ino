@@ -1,6 +1,14 @@
+#include <Costume.h>
+
 #include <SoftwareSerial.h>
-#include "Costume.h"
+
 #include <JsonParser.h>
+
+// include the library code:
+#include <LiquidCrystal.h>
+
+// initialize the library with the numbers of the interface pins
+LiquidCrystal lcd(11, 10,7,6, 5,4);
 
 SoftwareSerial RFID(2, 3); // RX and TX
 
@@ -13,8 +21,8 @@ int data1 = 0;
 int ok = -1;
 int PIN_BUTTON = 4;
 
-int PIN_RED = 13;
-int PIN_GREEN = 12;
+int PIN_RED = 9;
+int PIN_GREEN = 8;
 int PIN_BLUE = 11;
 
 String currentID="";
@@ -35,13 +43,14 @@ void setup()
   pinMode(PIN_RED, OUTPUT); // for status LEDs
   pinMode(PIN_GREEN, OUTPUT);
   pinMode(PIN_BLUE, OUTPUT);
-   pinMode(PIN_BUTTON, INPUT); 
-   
+  pinMode(PIN_BUTTON, INPUT); 
+  lcd.begin(16, 2);
+
   for (int a=0;a<MAX_AUTHORIZED_KEYS;a++){
     golden_keys[a]="";
   }
   golden_keys [0]="25348484856705355506565503";
-
+  lcd.print("init");
 }
 
 boolean comparetag(int aa[14], int bb[14])
@@ -116,54 +125,90 @@ void readTags()
     if (currentID.compareTo(master_key)==0)
       is_register=!is_register;
 
-    Serial.println(currentID);
-
-    RFID.flush(); // stops multiple reads
+    Serial.print(currentID);
+    delay(2000);
+    Serial.flush(); // stops multiple reads
 
     // do the tags match up?  
-    checkmytags();
+    // checkmytags();
+  }
+
+  if (Serial.available())
+  {
+    String result="";
+    result=Serial.readString();
+    ok++;
+    lcd.setCursor(0, 1);
+    lcd.print(result);
+    delay(2000);
+    if (result.compareTo("G1")==0){
+      ok=1;
+    }
+    //Serial.println(result);
+
+    else
+      ok=0;
+    Serial.flush();
   }
 
   // now do something based on tag type
   if (ok > 0) // if we had a match
   {
-    Serial.println("Accepted");
-    digitalWrite(PIN_GREEN, HIGH);
-    //   delay(1000);
-    digitalWrite(PIN_RED, LOW);
+    displayStatusOK();   
 
-    ok = -1;
+
   }
   else if (ok == 0) // if we didn't have a match
   {
-    Serial.println("Rejected");
-    digitalWrite(PIN_RED, HIGH);
-    //delay(1000);
-    digitalWrite(PIN_GREEN, LOW);
+    displayStatusError();
 
-    ok = -1;
+
   }
-
+  ok = -1;
   if (is_register){
-    digitalWrite(PIN_GREEN, HIGH);
-    digitalWrite(PIN_RED, HIGH);
-    delay(500);
-    digitalWrite(PIN_GREEN, LOW);
-    digitalWrite(PIN_RED, LOW);
-    delay(500);
-    
+    displayStatusOK();
+    //delay(500);
+    displayStatusError();
+    //delay(500);
+
   }
 }
 
 void loop()
 {
-costume.lightShoulder(COLOR_GREEN);
-costume.sendRFID("toto");
+  costume.lightShoulder(COLOR_GREEN);
+  //costume.sendRFID("toto");
   readTags();
 }
 
 
 
+
+
+void resetStatusControl(){
+  delay(2000);
+    lcd.clear();
+
+  digitalWrite(PIN_RED, LOW);
+  digitalWrite(PIN_GREEN, LOW);
+}
+
+void displayStatusError(){
+  digitalWrite(PIN_RED, HIGH);
+  resetStatusControl();
+  
+    lcd.setCursor(0, 1);
+  lcd.print("Business");
+
+}
+
+void displayStatusOK(){
+  digitalWrite(PIN_GREEN, HIGH);
+  resetStatusControl();
+  lcd.setCursor(0, 1);
+  // print the number of seconds since reset:
+  lcd.print("Golden");
+}
 
 
 

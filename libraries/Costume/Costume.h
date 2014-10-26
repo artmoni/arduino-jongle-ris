@@ -26,7 +26,10 @@ class Costume
 {
   public:
     Costume(int pin);
-    void lightShoulder(int color);
+    void turnONShoulder(int color);
+        void turnOFFShoulder(int color);
+
+    
     void lightButton();
     void sendRFID(String rfid);
   private:

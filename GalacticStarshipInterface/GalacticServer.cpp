@@ -3,7 +3,7 @@
 #include "Arduino.h"
 #include "GalacticServer.h"
 
-#define DEBUG true
+#define DEBUG false
 
 byte mac[] = {
   0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
@@ -12,7 +12,9 @@ IPAddress server(192,168,0,100);
 
 GalacticServer::GalacticServer(int pin)
 {
-  Serial.println("GalacticServer init");
+  if (DEBUG)
+
+    Serial.println("GalacticServer init");
 
 }
 
@@ -31,12 +33,15 @@ void GalacticServer::initConnection(){
 
 
 void GalacticServer::startConnection(String restAPI){
+  if (DEBUG)
 
-  Serial.println("connecting...");
+    Serial.println("connecting...");
 
   // if you get a connection, report back via serial:
   if (client.connect(server, 80)) {
-    Serial.println("connected");
+    if (DEBUG)
+
+      Serial.println("connected");
     // Make a HTTP request:
     client.println("GET "+restAPI+" HTTP/1.1");
     client.println("Host: StarShipInterface");
@@ -45,7 +50,8 @@ void GalacticServer::startConnection(String restAPI){
   }
   else {
     // kf you didn't get a connection to the server:
-    Serial.println("connection failed");
+    if (DEBUG)
+      Serial.println("connection failed");
   }
 }
 
@@ -54,8 +60,10 @@ void GalacticServer::endConnection()
 {
   // if the server's disconnected, stop the client:
   if (!client.connected()) {
-    Serial.println();
-    Serial.println("disconnecting.");
+    if (DEBUG){
+      Serial.println();
+      Serial.println("disconnecting.");
+    }
     client.stop();
     client.flush();
 
@@ -74,8 +82,9 @@ String GalacticServer::getPassengers()
   while (client.available()) {
     char c = client.read();
     passengersJSON= String(passengersJSON+c);
-  }  
-  Serial.print(passengersJSON);
+  } 
+  if (DEBUG) 
+    Serial.print(passengersJSON);
   endConnection();
   return passengersJSON;
 
@@ -95,19 +104,19 @@ String GalacticServer::getPassenger(String rfid){
       //Serial.print(c);
       if (c == '{' ) { //'<' is our begining character
         startRead = true; //Ready to start reading the part 
-       // passengerJSON= String(passengerJSON+'"');
+        // passengerJSON= String(passengerJSON+'"');
         passengerJSON= String(passengerJSON+c);
-        
+
       }
       else if(startRead){
 
         //if(c != '}'){
-         // if (c=='"')
-           //passengerJSON= String(passengerJSON+"\\");
-          passengerJSON= String(passengerJSON+c);
+        // if (c=='"')
+        //passengerJSON= String(passengerJSON+"\\");
+        passengerJSON= String(passengerJSON+c);
         //}
         //if (c=='}')
-//        passengerJSON= String(passengerJSON+'"');
+        //        passengerJSON= String(passengerJSON+'"');
 
       }
       connectLoop = 0;  
@@ -119,8 +128,10 @@ String GalacticServer::getPassenger(String rfid){
     if(connectLoop > 10000)
     {
       // then close the connection from this end.
-      Serial.println();
-      Serial.println(F("Timeout"));
+      if (DEBUG){
+        Serial.println();
+        Serial.println(F("Timeout"));
+      }
       client.stop();
     }
     // this is a delay for the connectLoop timing
@@ -133,6 +144,9 @@ String GalacticServer::getPassenger(String rfid){
   endConnection();
   return passengerJSON;
 }
+
+
+
 
 
 

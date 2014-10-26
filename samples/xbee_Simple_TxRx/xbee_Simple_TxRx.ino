@@ -20,30 +20,35 @@ void setup()
   Serial.begin(9600);
   // set pin as output
   pinMode(WLED, OUTPUT);
-digitalWrite(WLED, LOW);
+  digitalWrite(WLED, LOW);
 }
 
+boolean myBoolean=false;
 void loop()
 {
   // if the switch is pressed
-  
+
   // send the character 'a' though the xBee
 
-  Serial.print("6611318006743110");
-  
+  if (myBoolean)
+    Serial.print("6611318006743110");
+  else
+    Serial.print("toto");
+    myBoolean=!myBoolean;
   delay(2000);
   Serial.flush();
-  
+
   //Serial.write("6611318006743110");
 
   // if data available
   if (Serial.available())
   {
     // read data
-    data = Serial.read();
-
+    //data = Serial.read();
+    String name=Serial.readString();
+    //Serial.print("name="+name);
     // if data received is 'a'
-    if (data == 'a')
+    if (name == "G1")
     {
       // turn ON the board LED
       digitalWrite(WLED, HIGH);
@@ -60,4 +65,5 @@ void loop()
   // wait 100ms
   delay(1000);
 }
+
 

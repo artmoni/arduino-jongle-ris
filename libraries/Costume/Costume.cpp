@@ -8,7 +8,7 @@ Costume::Costume(int pin)
   _pin = pin;
 }
 
-void Costume::lightShoulder(int color)
+void Costume::turnONShoulder(int color)
 {
   switch (color)
   {
@@ -28,15 +28,18 @@ void Costume::lightShoulder(int color)
     break;
   }
 
-  delay(3000); 
-  digitalWrite(RUBANLED_LEFT_PIN_BLUE, LOW);
+  //delay(3000); 
+  
+}
+void Costume::turnOFFShoulder(int color){
+
+digitalWrite(RUBANLED_LEFT_PIN_BLUE, LOW);
   digitalWrite(RUBANLED_RIGHT_PIN_BLUE, LOW);
   digitalWrite(RUBANLED_LEFT_PIN_GREEN, LOW);
   digitalWrite(RUBANLED_RIGHT_PIN_GREEN, LOW);
   digitalWrite(RUBANLED_LEFT_PIN_GREEN, LOW);
   digitalWrite(RUBANLED_RIGHT_PIN_GREEN, LOW);
 }
-
 void Costume::lightButton()
 {
   digitalWrite(_pin, HIGH);

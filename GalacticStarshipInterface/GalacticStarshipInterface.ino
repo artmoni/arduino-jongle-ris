@@ -11,6 +11,10 @@
 #include <SoftwareSerial.h>
 //SoftwareSerial console(2, 3);
 
+
+#define PIN_GREEN 8
+#define PIN_RED 7
+
 using namespace ArduinoJson::Parser;
 
 GalacticServer starship(1);
@@ -20,36 +24,59 @@ JsonParser<32> parser;
 void setup() {
   Serial.begin(9600);
   // console.begin(Serial);
-
+  pinMode(PIN_GREEN, OUTPUT);
+  pinMode(PIN_RED, OUTPUT);
   starship.initConnection();
+
+  /*
+  Serial.print("+++");
+   delay(1000);
+   Serial.println();
+   Serial.print("ATDL13A200");
+   delay(100);
+   Serial.println();
+   Serial.print("ATDH40AFBESD4"); 
+   Serial.println();
+   Serial.print("ATCN"); 
+   Serial.println();
+  */ 
+  delay(100);
 }
 
 String scannedRFID="";
 void loop()
 {
-  
+
   //console.println("--------------------------");
 
+
+
   if (Serial.available())
-  {scannedRFID="";
+  {
+    scannedRFID="";
     scannedRFID=Serial.readString();
   }
 
   if (scannedRFID != "")
 
-  {    Serial.flush();
-    Serial.println("RFID1="+scannedRFID);
+  {    
+    resetStatusControl();
+    Serial.flush();
+    //Serial.println("RFID1="+scannedRFID);
 
 
     Passenger passenger;
     passenger= getPassenger(scannedRFID);
-     if (passenger.isGolden()==1){
-      Serial.println(scannedRFID+" Bienvenue "+ passenger.getFirstname());
+    if (passenger.isGolden()==0){
+      //Serial.println(scannedRFID+" Bienvenue "+ passenger.getFirstname());
+      Serial.print("G0");
+      displayStatusError();
     }
     else{
-      Serial.println(scannedRFID+" Seconde classe");
+      //Serial.println(scannedRFID+" Seconde classe");
+      Serial.print("G1");
+      displayStatusOK();
     }
-    delay(2000);
     scannedRFID="";
   }
 
@@ -71,7 +98,8 @@ String getPassengers(){
   JsonObject root = parser.parse(parseJson);
   if (!root.success())
   {
-    Serial.println("JsonParser.parse() failed");
+    //Serial.println("JsonParser.parse() failed");
+    displayStatusError();
     return "";
   }
   char* firstname = root["firstname"];
@@ -82,7 +110,7 @@ Passenger getPassenger(String rfidToCheck){
   Passenger passenger;
   String json;
   json=  starship.getPassenger(rfidToCheck);
- 
+
   //char json[]="{\"error\":false,\"rfid\":\"qsdsqd\",\"firstname\":\"ssss\",\"lastname\":\"fleudry\",\"check_count\":0,\"is_golden\":1}";
 
   //char *json='{"error":false,"rfid":"12098HJ","firstname":"seb","lastname":"fleury","check_count":2,"is_golden":1}';
@@ -94,7 +122,8 @@ Passenger getPassenger(String rfidToCheck){
   JsonObject root = parser.parse(parseJson);
   if (!root.success())
   {
-    Serial.println("JsonParser.parse() failed");
+    //Serial.println("JsonParser.parse() failed");
+    displayStatusError();
     return passenger;
   }
 
@@ -111,6 +140,22 @@ Passenger getPassenger(String rfidToCheck){
   return passenger;
 }
 
+
+void resetStatusControl(){
+   delay(2000);
+  digitalWrite(PIN_RED, LOW);
+  digitalWrite(PIN_GREEN, LOW);
+}
+
+void displayStatusError(){
+  digitalWrite(PIN_RED, HIGH);
+ resetStatusControl();
+}
+
+void displayStatusOK(){
+  digitalWrite(PIN_GREEN, HIGH);
+ resetStatusControl();
+}
 
 
 
