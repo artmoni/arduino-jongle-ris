@@ -18,6 +18,7 @@ SoftwareSerial RFID(2, 3); // RX and TX
 Costume costume(13);
 
 int data1 = 0;
+char dataRFID=0;
 int ok = -1;
 int PIN_BUTTON = 4;
 
@@ -104,9 +105,112 @@ void checkmytags() // compares each tag against the tag just read
   }
 }
 
+unsigned long hexToDec(String hexString) {
+  long decValue = 0;
+  int nextInt;
+  for (int i = 0; i < hexString.length(); i++) {
+    nextInt = int(hexString.charAt(i));
+
+    if (nextInt >= 48 && nextInt <= 57) nextInt = map(nextInt, 48, 57, 0, 9);
+    if (nextInt >= 65 && nextInt <= 70) nextInt = map(nextInt, 65, 70, 10, 15);
+    if (nextInt >= 97 && nextInt <= 102) nextInt = map(nextInt, 97, 102, 10, 15);
+    nextInt = constrain(nextInt, 0, 15);
+    decValue = (decValue * 16) + nextInt;
+  }
+
+  return decValue;
+}
+
+String decToHex(byte decValue, byte desiredStringLength) {
+  String hexString = String(decValue, HEX);
+  while (hexString.length() < desiredStringLength) hexString = "0" + hexString;
+  return hexString;
+}
+
+long readTags2(){
+  byte i = 0;
+  byte val = 0;
+  byte code[6];
+  byte checksum = 0;
+  byte bytesread = 0;
+  byte tempbyte = 0;
+  long rfidID=0;
+
+  if(RFID.available() > 0) {
+
+
+    if((val = RFID.read()) == 2) {                  // check for header 
+
+
+
+      bytesread = 0; 
+      while (bytesread < 12) {                        // read 10 digit code + 2 digit checksum
+        //        Serial.println("read 10 digit code: ");
+
+        if( RFID.available() > 0) { 
+          val = RFID.read();
+          if((val == 0x0D)||(val == 0x0A)||(val == 0x03)||(val == 0x02)) { // if header or stop bytes before the 10 digit reading 
+            break;                                    // stop reading
+          }
+          //Serial.print(val);
+          // Do Ascii/Hex conversion:
+          if ((val >= '0') && (val <= '9')) {
+            val = val - '0';
+          } 
+          else if ((val >= 'A') && (val <= 'F')) {
+            val = 10 + val - 'A';
+          }
+
+          // Every two hex-digits, add byte to code:
+          if (bytesread & 1 == 1) {
+            // make some space for this hex-digit by
+            // shifting the previous hex-digit with 4 bits to the left:
+            code[bytesread >> 1] = (val | (tempbyte << 4));
+
+            if (bytesread >> 1 != 5) {                // If we're at the checksum byte,
+              checksum ^= code[bytesread >> 1];       // Calculate the checksum... (XOR)
+            };
+          } 
+          else {
+            tempbyte = val;                           // Store the first hex digit first...
+          };
+
+          bytesread++;                                // ready to read next digit
+        } 
+      } 
+
+      // Output to Serial:
+      String monCode="";
+      if (bytesread == 12) {                          // if 12 digit read is complete
+        // Serial.print("5-byte code: ");
+        for (i=2; i<5; i++) {
+          monCode=monCode+decToHex(code[i],2);
+          if (code[i] < 16) Serial.print("0");
+          // Serial.print(code[i], HEX);
+          //Serial.print("("+String(decToHex(code[i],2))+")");          
+          //Serial.print(" ");
+        }
+
+        rfidID = hexToDec(monCode);
+        //Serial.println("le code est=>"+String(rfidID));
+
+        // Serial.print("Checksum: ");
+        //Serial.print(code[5], HEX);
+        //Serial.println(code[5] == checksum ? " -- passed." : " -- error.");
+        // Serial.println();
+      }
+
+      bytesread = 0;
+      Serial.print(String(rfidID));
+    }
+  }
+  return rfidID;
+}
 void readTags()
 {
   ok = -1;
+
+/*
 
   if (RFID.available() > 0) 
   {
@@ -114,9 +218,12 @@ void readTags()
     // read tag numbers
     delay(50); // needed to allow time for the data to come in from the serial buffer.
 
+    Serial.println(dataRFID);
     for (int z = 0 ; z < RFID_LENGHT ; z++) // read the rest of the tag
     {
-      data1 = RFID.read();
+
+      data1=RFID.read();
+      //data1 = RFID.read();
       newtag[z] = data1;
       currentID+=data1;
 
@@ -132,43 +239,46 @@ void readTags()
     // do the tags match up?  
     // checkmytags();
   }
+*/
+readTags2();
 
+  String code="";
+  String name ="";
   if (Serial.available())
   {
     String result="";
     result=Serial.readString();
     ok++;
-    lcd.setCursor(0, 1);
-    lcd.print(result);
+
+    //lcd.print(result);
     delay(2000);
-    if (result.compareTo("G1")==0){
-      ok=1;
+    code = result.substring(0,2);
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print(code+" "+code.compareTo("G1"));
+    name = result.substring(2);
+    lcd.setCursor(0, 1);
+    lcd.print(name);
+    delay(2000);
+    if (code.compareTo("G1")==0){
+      displayStatusOK(name,"Golden");
+    }   
+    else{
+      displayStatusError(name,"Business");
     }
-    //Serial.println(result);
 
-    else
-      ok=0;
     Serial.flush();
-  }
-
-  // now do something based on tag type
-  if (ok > 0) // if we had a match
-  {
-    displayStatusOK();   
 
 
-  }
-  else if (ok == 0) // if we didn't have a match
-  {
-    displayStatusError();
+
 
 
   }
   ok = -1;
   if (is_register){
-    displayStatusOK();
+    displayStatusOK("Registering", "...");
     //delay(500);
-    displayStatusError();
+    displayStatusError("Registering","...");
     //delay(500);
 
   }
@@ -187,28 +297,42 @@ void loop()
 
 void resetStatusControl(){
   delay(2000);
-    lcd.clear();
+  lcd.clear();
 
   digitalWrite(PIN_RED, LOW);
   digitalWrite(PIN_GREEN, LOW);
 }
 
-void displayStatusError(){
+void displayStatusError(String name, String description){
   digitalWrite(PIN_RED, HIGH);
-  resetStatusControl();
-  
-    lcd.setCursor(0, 1);
-  lcd.print("Business");
-
-}
-
-void displayStatusOK(){
-  digitalWrite(PIN_GREEN, HIGH);
-  resetStatusControl();
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print(name);
   lcd.setCursor(0, 1);
-  // print the number of seconds since reset:
-  lcd.print("Golden");
+  lcd.print(description);
+  resetStatusControl();
+
+
+
 }
+
+void displayStatusOK(String name, String description){
+  digitalWrite(PIN_GREEN, HIGH);
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print(name);
+  lcd.setCursor(0, 1);
+  lcd.print(description);
+  resetStatusControl();
+}
+
+
+
+
+
+
+
+
 
 
 

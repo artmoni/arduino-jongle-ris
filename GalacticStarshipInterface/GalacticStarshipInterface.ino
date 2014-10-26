@@ -70,11 +70,14 @@ void loop()
     if (passenger.isGolden()==0){
       //Serial.println(scannedRFID+" Bienvenue "+ passenger.getFirstname());
       Serial.print("G0");
+      Serial.print(passenger.getFirstname());
+      
       displayStatusError();
     }
     else{
       //Serial.println(scannedRFID+" Seconde classe");
       Serial.print("G1");
+      Serial.print(passenger.getFirstname());
       displayStatusOK();
     }
     scannedRFID="";
