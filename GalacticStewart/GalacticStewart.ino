@@ -9,6 +9,15 @@
 // include the library code:
 #include <LiquidCrystal.h>
 
+ #include "pitches.h"
+
+// notes in the melody:
+int melody[] = {
+  NOTE_C4, NOTE_G3,NOTE_G3, NOTE_A3, NOTE_G3,0, NOTE_B3, NOTE_C4};
+  // note durations: 4 = quarter note, 8 = eighth note, etc.:
+int noteDurations[] = {
+  4, 8, 8, 4,4,4,4,4 };
+
 // initialize the library with the numbers of the interface pins
 LiquidCrystal lcd(11, 10,7,6, 5,4);
 
@@ -17,6 +26,9 @@ LiquidCrystal lcd(11, 10,7,6, 5,4);
 #define RFID_LENGHT 14
 
 Costume costume(13);
+
+//SeeedRFIDLib RFID(2,3);
+//RFIDTag tag;
 Rfid leftHand;
 
 int data1 = 0;
@@ -24,9 +36,9 @@ char dataRFID=0;
 int ok = -1;
 int PIN_BUTTON = 4;
 
-int PIN_RED = 9;
-int PIN_GREEN = 8;
-int PIN_BLUE = 11;
+int PIN_RED = 8;
+int PIN_GREEN = 11;
+int PIN_BLUE = 9;
 
 String currentID="";
 
@@ -53,6 +65,21 @@ void setup()
   }
   golden_keys [0]="25348484856705355506565503";
   lcd.print("init");
+       for (int thisNote = 0; thisNote < 8; thisNote++) {
+
+    // to calculate the note duration, take one second
+    // divided by the note type.
+    //e.g. quarter note = 1000 / 4, eighth note = 1000/8, etc.
+    int noteDuration = 1000/noteDurations[thisNote];
+    tone(3, melody[thisNote],noteDuration);
+
+    // to distinguish the notes, set a minimum time between them.
+    // the note's duration + 30% seems to work well:
+    int pauseBetweenNotes = noteDuration * 1.30;
+    delay(pauseBetweenNotes);
+    // stop the tone playing:
+    noTone(3);
+  }
 }
 
 boolean comparetag(int aa[14], int bb[14])
@@ -157,10 +184,24 @@ void readTags()
 void loop()
 {
   long passengerID=0;
-  costume.lightShoulder(COLOR_GREEN);
-  passengerID=leftHand.readRFID();
+ // costume.lightShoulder(COLOR_GREEN);
+
+  delay(2000);
+   digitalWrite(PIN_RED, LOW);
+  delay(2000);
+   digitalWrite(PIN_RED, HIGH);
+   delay(2000);
+   digitalWrite(PIN_BLUE, LOW);
+  delay(2000);
+   digitalWrite(PIN_BLUE, HIGH);
+  
+ passengerID=leftHand.readRFID();
   if (passengerID!=0)
     Serial.print(String(passengerID));
+    lcd.setCursor(0, 1);
+    lcd.print(String(passengerID));
+    
+    
 }
 
 
