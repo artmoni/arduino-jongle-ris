@@ -1,20 +1,31 @@
+/*
+*  This program manage a costume
+ *  Creator: Sebastien FLEURY
+ *    La Compagnie Jongle&Ris
+ * 
+ */
+
 #include "Rfid.h"
-
-#include <Costume.h>
-
+#include "Costume.h"
 #include <SoftwareSerial.h>
-
 #include <JsonParser.h>
-
-// include the library code:
 #include <LiquidCrystal.h>
+#include "pitches.h"
+#include "golden.h"
 
- #include "pitches.h"
+/*
+*
+ * GLOBAL PARAMETERS
+ */
+#define MAX_AUTHORIZED_KEYS 1
+#define RFID_LENGHT 14
 
 // notes in the melody:
-int melody[] = {
+int melody2[] = {
   NOTE_C4, NOTE_G3,NOTE_G3, NOTE_A3, NOTE_G3,0, NOTE_B3, NOTE_C4};
-  // note durations: 4 = quarter note, 8 = eighth note, etc.:
+int melody[] = {
+  NOTE_E2, NOTE_D8};
+// note durations: 4 = quarter note, 8 = eighth note, etc.:
 int noteDurations[] = {
   4, 8, 8, 4,4,4,4,4 };
 
@@ -22,8 +33,7 @@ int noteDurations[] = {
 LiquidCrystal lcd(11, 10,7,6, 5,4);
 
 
-#define MAX_AUTHORIZED_KEYS 100
-#define RFID_LENGHT 14
+
 
 Costume costume(13);
 
@@ -40,16 +50,16 @@ int PIN_RED = 8;
 int PIN_GREEN = 11;
 int PIN_BLUE = 9;
 
-String currentID="";
 
 
 // use first sketch in http://wp.me/p3LK05-3Gk to get your tag numbers
 int newtag[14] = { 
   0,0,0,0,0,0,0,0,0,0,0,0,0,0}; // used for read comparisons
-String golden_keys[MAX_AUTHORIZED_KEYS];
+//String golden_keys[MAX_AUTHORIZED_KEYS];
 
-String master_key="25348484856705355525167663";
+long master_key=9393987;
 boolean is_register=false;
+long passengerID=0;
 
 void setup()
 {
@@ -60,12 +70,10 @@ void setup()
   pinMode(PIN_BUTTON, INPUT); 
   lcd.begin(16, 2);
 
-  for (int a=0;a<MAX_AUTHORIZED_KEYS;a++){
-    golden_keys[a]="";
-  }
-  golden_keys [0]="25348484856705355506565503";
+
+  //golden_keys [0]="25348484856705355506565503";
   lcd.print("init");
-       for (int thisNote = 0; thisNote < 8; thisNote++) {
+  for (int thisNote = 0; thisNote < 8; thisNote++) {
 
     // to calculate the note duration, take one second
     // divided by the note type.
@@ -80,6 +88,7 @@ void setup()
     // stop the tone playing:
     noTone(3);
   }
+  costume.turnOFFShoulder();
 }
 
 boolean comparetag(int aa[14], int bb[14])
@@ -100,15 +109,15 @@ boolean comparetag(int aa[14], int bb[14])
   return ff;
 }
 
-void checkmytags() // compares each tag against the tag just read
+boolean checkmytags(long currentID) // compares each tag against the tag just read
 {
   ok = 0; // this variable helps decision-making,
   // if it is 1 we have a match, zero is a read but no match,
   // -1 is no read attempt made
-  if (currentID.compareTo(master_key)==0){
+  if (currentID ==master_key){
     Serial.println("Master key");
     ok++;
-    return;
+    return true;
   }
   if (is_register)
     Serial.println("Is registering...");
@@ -119,18 +128,19 @@ void checkmytags() // compares each tag against the tag just read
     Serial.print(golden_keys[key]);
     Serial.println();
 
-    if (currentID.compareTo(golden_keys[key])==0){
-      ok++;
+    if (currentID==golden_keys[key]){
+
       Serial.println("found "+currentID);
-      break;
+      return true;
     }
-    else if (golden_keys[key].length()==0&&is_register){
-      golden_keys[key]=String(currentID);
-      Serial.println("Golden :"+golden_keys[key]+ " - "+ currentID);
+    else if (golden_keys[key]==0&&is_register){
+      golden_keys[key]=currentID;
+      Serial.println("Golden :"+String(golden_keys[key])+ " - "+ currentID);
       is_register=false;
     }
 
   }
+  return false;
 }
 
 
@@ -181,27 +191,38 @@ void readTags()
   }
 }
 
+long time;
 void loop()
 {
-  long passengerID=0;
- // costume.lightShoulder(COLOR_GREEN);
+  passengerID=0;
 
-  delay(2000);
-   digitalWrite(PIN_RED, LOW);
-  delay(2000);
-   digitalWrite(PIN_RED, HIGH);
-   delay(2000);
-   digitalWrite(PIN_BLUE, LOW);
-  delay(2000);
-   digitalWrite(PIN_BLUE, HIGH);
-  
- passengerID=leftHand.readRFID();
-  if (passengerID!=0)
-    Serial.print(String(passengerID));
+
+  passengerID=leftHand.readRFID();
+  if (passengerID!=0){
+    time=millis();
+
+
+    Serial.println(String("ID="+passengerID));
+    lcd.clear();
     lcd.setCursor(0, 1);
     lcd.print(String(passengerID));
-    
-    
+    if (checkmytags(passengerID)){
+      tone(3,NOTE_D8,1000);
+      lcd.setCursor(0, 0);
+      lcd.print("Golden");
+      costume.turnONShoulder(COLOR_BLUE); 
+    }
+    else{
+      tone(3,NOTE_G3,1000);
+      lcd.setCursor(0, 0);
+      lcd.print("Business");
+      costume.turnONShoulder(COLOR_RED);
+    }
+  }
+  if (millis()-time>=3000){
+    costume.turnOFFShoulder();
+    costume.resetHandLED();
+  }
 }
 
 
@@ -238,6 +259,12 @@ void displayStatusOK(String name, String description){
   lcd.print(description);
   resetStatusControl();
 }
+
+
+
+
+
+
 
 
 
