@@ -17,14 +17,14 @@
 *
  * GLOBAL PARAMETERS
  */
-#define MAX_AUTHORIZED_KEYS 1
+
 #define RFID_LENGHT 14
 
 // notes in the melody:
 int melody2[] = {
   NOTE_C4, NOTE_G3,NOTE_G3, NOTE_A3, NOTE_G3,0, NOTE_B3, NOTE_C4};
 int melody[] = {
-  NOTE_E2, NOTE_D8};
+  NOTE_E2, NOTE_D8, NOTE_G3};
 // note durations: 4 = quarter note, 8 = eighth note, etc.:
 int noteDurations[] = {
   4, 8, 8, 4,4,4,4,4 };
@@ -43,12 +43,7 @@ Rfid leftHand;
 
 int data1 = 0;
 char dataRFID=0;
-int ok = -1;
 int PIN_BUTTON = 4;
-
-int PIN_RED = 8;
-int PIN_GREEN = 11;
-int PIN_BLUE = 9;
 
 
 
@@ -64,15 +59,25 @@ long passengerID=0;
 void setup()
 {
   Serial.begin(9600);  // start serial to PC 
-  pinMode(PIN_RED, OUTPUT); // for status LEDs
-  pinMode(PIN_GREEN, OUTPUT);
-  pinMode(PIN_BLUE, OUTPUT);
+  /*
+   Serial.print("+++");
+   delay(1000);
+   Serial.println();
+   Serial.print("ATDL 13A200");
+   delay(100);
+   Serial.println();
+   Serial.print("ATDH 40B451CF"); 
+   Serial.println();
+   Serial.print("ATCN"); 
+   Serial.println();*/
+
+
   pinMode(PIN_BUTTON, INPUT); 
   lcd.begin(16, 2);
 
 
   //golden_keys [0]="25348484856705355506565503";
-  lcd.print("init");
+  lcd.print("Welcome agent");
   for (int thisNote = 0; thisNote < 8; thisNote++) {
 
     // to calculate the note duration, take one second
@@ -109,20 +114,16 @@ boolean comparetag(int aa[14], int bb[14])
   return ff;
 }
 
-boolean checkmytags(long currentID) // compares each tag against the tag just read
+short checkmytags(long currentID) // compares each tag against the tag just read
 {
-  ok = 0; // this variable helps decision-making,
-  // if it is 1 we have a match, zero is a read but no match,
-  // -1 is no read attempt made
   if (currentID ==master_key){
-    Serial.println("Master key");
-    ok++;
+    lcd.print("Master key");
     return true;
   }
   if (is_register)
     Serial.println("Is registering...");
 
-  for (int key=0;key<MAX_AUTHORIZED_KEYS;key++){
+  for (int key=0;key<MAX_GOLDEN;key++){
     Serial.print(key);
     Serial.print(" ");
     Serial.print(golden_keys[key]);
@@ -130,58 +131,75 @@ boolean checkmytags(long currentID) // compares each tag against the tag just re
 
     if (currentID==golden_keys[key]){
 
-      Serial.println("found "+currentID);
-      return true;
-    }
-    else if (golden_keys[key]==0&&is_register){
-      golden_keys[key]=currentID;
-      Serial.println("Golden :"+String(golden_keys[key])+ " - "+ currentID);
-      is_register=false;
+      Serial.println("found GOLDEN="+currentID);
+      return GOLDEN;
+    }/*
+    else 
+     
+     
+     if (golden_keys[key]==0&&is_register){
+     golden_keys[key]=currentID;
+     Serial.println("Golden :"+String(golden_keys[key])+ " - "+ currentID);
+     is_register=false;
+     }*/
+
+  }
+
+  for (int key=0;key<MAX_ELU;key++){
+
+
+    if (currentID==elu_keys[key]){
+
+      Serial.println("found ELU="+currentID);
+      return ELU;
     }
 
   }
-  return false;
+  for (int key=0;key<MAX_DDAY;key++){
+
+
+    if (currentID==dday_keys[key]){
+
+      Serial.println("found GOLDEN_DDAY="+currentID);
+      return GOLDEN_DDAY;
+    }
+
+  }
+  return BUSINESS;
 }
 
 
 
-void readTags()
+void readTagsRemote()
 {
-  ok = -1;
+
 
   String code="";
   String name ="";
+
   if (Serial.available())
   {
     String result="";
     result=Serial.readString();
-    ok++;
 
-    //lcd.print(result);
-    delay(2000);
+    delay(100);
     code = result.substring(0,2);
-    lcd.clear();
-    lcd.setCursor(0, 0);
-    lcd.print(code+" "+code.compareTo("G1"));
     name = result.substring(2);
-    lcd.setCursor(0, 1);
-    lcd.print(name);
-    delay(2000);
-    if (code.compareTo("G1")==0){
-      displayStatusOK(name,"Golden");
-    }   
-    else{
+    delay(100);
+    if (code.compareTo("G0")==0){
       displayStatusError(name,"Business");
     }
+    else
+      if (code.compareTo("G1")==0){
+        displayStatusOK(name,"Golden");
+      }   
+      else if (code.compareTo("G2")==0){
+        displayStatusError(name,"Elu");
+      }
 
     Serial.flush();
 
-
-
-
-
   }
-  ok = -1;
   if (is_register){
     displayStatusOK("Registering", "...");
     //delay(500);
@@ -191,74 +209,140 @@ void readTags()
   }
 }
 
-long time;
+long timeCheckRFID;
+long timeDisplayAccess=0;
+long timeoutRegistering=0;
 void loop()
 {
   passengerID=0;
 
-
   passengerID=leftHand.readRFID();
   if (passengerID!=0){
-    time=millis();
+    timeCheckRFID=millis();
 
-
-    Serial.println(String("ID="+passengerID));
-    lcd.clear();
-    lcd.setCursor(0, 1);
-    lcd.print(String(passengerID));
-    if (checkmytags(passengerID)){
-      tone(3,NOTE_D8,1000);
-      lcd.setCursor(0, 0);
-      lcd.print("Golden");
-      costume.turnONShoulder(COLOR_BLUE); 
+    if (passengerID ==master_key){
+      displayChecking("~ Master key ~","Promote to Golden");
+      timeoutRegistering=millis();
+      is_register=true;
     }
     else{
-      tone(3,NOTE_G3,1000);
-      lcd.setCursor(0, 0);
-      lcd.print("Business");
-      costume.turnONShoulder(COLOR_RED);
+      Serial.print(String(passengerID));       
+      
+      displayChecking("~ Checking Access ~",String(passengerID));
     }
+    /*lcd.clear();
+     lcd.setCursor(0, 1);
+     lcd.print(String(passengerID));
+     
+     delay(100);
+     int passenger_type = checkmytags(passengerID);
+     if (passenger_type==GOLDEN){
+     displayStatusOK("","Golden");
+     
+     }
+     else if (passenger_type==BUSINESS){
+     displayStatusError("","Business");
+     
+     } 
+     else if (passenger_type==ELU){
+     displayStatusWarning("","Elu");
+     
+     }
+     */
   }
-  if (millis()-time>=3000){
+  readTagsRemote();
+
+
+  if (millis()-timeCheckRFID>=3000&&timeCheckRFID!=0){
+   // costume.turnOFFShoulder();
+  costume.lightOFFChecking();
+    timeCheckRFID=0;
+  }
+  if (millis()-timeDisplayAccess>=3000&&timeDisplayAccess!=0){
     costume.turnOFFShoulder();
     costume.resetHandLED();
+    timeDisplayAccess=0;
+  }
+  if (millis()-timeoutRegistering>=10000&&timeoutRegistering!=0){
+    is_register=false;
+    timeoutRegistering=0;
+    lcd.clear();
+          //displayChecking("~ Master key ~","Timeout Registering");
+
   }
 }
-
-
 
 
 
 void resetStatusControl(){
-  delay(2000);
+  //delay(2000);
   lcd.clear();
-
-  digitalWrite(PIN_RED, LOW);
-  digitalWrite(PIN_GREEN, LOW);
+  lcd.noBlink();
 }
 
 void displayStatusError(String name, String description){
-  digitalWrite(PIN_RED, HIGH);
+  //digitalWrite(PIN_RED, HIGH);
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print(name);
   lcd.setCursor(0, 1);
   lcd.print(description);
-  resetStatusControl();
 
+  tone(3,NOTE_E3,1000);
 
-
+  costume.turnONShoulder(COLOR_RED);
+  // resetStatusControl();
+  timeDisplayAccess=millis();
 }
 
 void displayStatusOK(String name, String description){
-  digitalWrite(PIN_GREEN, HIGH);
+  // digitalWrite(PIN_GREEN, HIGH);
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print(name);
   lcd.setCursor(0, 1);
   lcd.print(description);
-  resetStatusControl();
+  tone(3,NOTE_D8,1000);
+
+  costume.turnONShoulder(COLOR_BLUE); 
+  //resetStatusControl();
+  timeDisplayAccess=millis();
+
 }
+
+void displayStatusWarning(String name, String description){
+  // digitalWrite(PIN_GREEN, HIGH);
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print(name);
+  lcd.setCursor(0, 1);
+  lcd.print(description);
+
+  tone(3,NOTE_C3,700);
+
+  costume.turnONShoulder(COLOR_GREEN); 
+  // resetStatusControl();
+  timeDisplayAccess=millis();
+
+}
+
+void displayChecking(String line1, String description){
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print(line1);
+  lcd.setCursor(0, 1);
+  lcd.print(description);
+  lcd.blink();
+  tone(3,NOTE_C8,700);
+  costume.lightONChecking();
+  timeDisplayAccess=millis();
+
+}
+
+
+
+
+
 
 
 

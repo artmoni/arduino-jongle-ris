@@ -9,6 +9,18 @@ void setup()
   // setting of your XBee.
   //XBee.begin(9600);
   Serial.begin(9600);
+  /*
+  Serial.print("+++");
+   delay(1000);
+   Serial.println();
+   Serial.print("ATDH 13A200");
+   delay(100);
+   Serial.println();
+   Serial.print("ATDL 40BE51CF"); 
+   Serial.println();
+   Serial.print("ATCN"); 
+   Serial.println();
+  */
 }
 
 void loop()

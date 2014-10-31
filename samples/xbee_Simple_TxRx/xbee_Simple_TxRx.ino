@@ -23,18 +23,18 @@ void setup()
   digitalWrite(WLED, LOW);
 }
 
-boolean myBoolean=false;
+boolean is_client=true;
 void loop()
 {
   // if the switch is pressed
 
   // send the character 'a' though the xBee
 
-  if (myBoolean)
-    Serial.print("6611318006743110");
+  if (is_client)
+    Serial.println("Client");
   else
-    Serial.print("toto");
-    myBoolean=!myBoolean;
+    Serial.println("Server");
+    
   delay(2000);
   Serial.flush();
 
@@ -52,13 +52,13 @@ void loop()
     {
       // turn ON the board LED
       digitalWrite(WLED, HIGH);
-      //Serial.print("turn ON");
+      Serial.print("turn ON");
     }
     else
     {
       // if not turn if OFF
       digitalWrite(WLED, LOW);
-      //Serial.print(String(data));
+      Serial.print("turn OFF");
     }
   }
 

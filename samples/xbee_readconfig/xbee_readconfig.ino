@@ -7,6 +7,14 @@ void setup()
   Serial.begin(9600);
 
   pinMode(PIN, OUTPUT);
+  Serial.println("------------------");
+  delay(1200);
+  Serial.print("+++");
+  delay(2000);
+    Serial.println();
+  Serial.println("ATSC 0C");
+ Serial.println();
+  Serial.println("ATCN");
 }
 
 void loop()
@@ -14,7 +22,7 @@ void loop()
   Serial.println("------------------");
   delay(1200);
   Serial.print("+++");
-  delay(1200);
+  delay(2000);
   bool bOK = false;
   while (Serial.available() > 0) {
     Serial.write(Serial.read());
@@ -45,7 +53,9 @@ void displayXbeeConfig(){
   Serial.println();
   Serial.println("ATCH");
   readXbee();
-
+Serial.println();
+  Serial.println("ATSC");
+  readXbee();
   // Serial.println("The serial number of the XBee module (HIGH 32bits)");
   Serial.println();
   Serial.println("ATSH");
