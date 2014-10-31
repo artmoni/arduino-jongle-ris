@@ -12,10 +12,10 @@ void Passenger::setLastname(String lastname){
 void Passenger::setRFID(String rfid){
   this->rfid=rfid;
 }
-void Passenger::setGolden(short is_golden){
+void Passenger::setGolden(long is_golden){
   this->is_golden=is_golden;
 }
-short Passenger::isGolden(){
+long Passenger::isGolden(){
   return this->is_golden;
 }
 

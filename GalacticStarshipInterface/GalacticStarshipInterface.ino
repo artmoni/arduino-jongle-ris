@@ -73,7 +73,7 @@ void loop()
 
     Passenger passenger;
     passenger= getPassenger(scannedRFID);
-    if (passenger.isGolden()==0){
+    if (passenger.isGolden()==0){ 
       //Serial.println(scannedRFID+" Bienvenue "+ passenger.getFirstname());
       Serial.print("G0");
       Serial.print(passenger.getFirstname());
@@ -148,12 +148,13 @@ Passenger getPassenger(String rfidToCheck){
   char * firstname =root["firstname"];
   char * lastname =root["lastname"];  
   char * rfid =root["rfid"];
-  int is_golden=root["is_golden"];
+  long is_golden=root["is_golden"];
 
   passenger.setFirstname(String(firstname));
   passenger.setLastname(String(lastname));
   passenger.setRFID(String(rfid));
-  passenger.setGolden(short(is_golden));
+  passenger.setGolden(is_golden);
+   // Serial.println("Passenger isgolden="+String(is_golden)+" name"+rfid+" "+lastname+" "+firstname);
 
   return passenger;
 }

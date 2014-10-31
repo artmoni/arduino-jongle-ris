@@ -11,15 +11,15 @@ public:
   void setFirstname(String name);
   void setLastname(String lastname);
   void setRFID(String rfid);
-  void setGolden(short is_golden);
-  short isGolden();
+  void setGolden(long is_golden);
+  long isGolden();
   String getFirstname();
  
 private:
  String rfid;
  String lastname;
  String firstname;
- short is_golden;
+ long is_golden;
  
  
 

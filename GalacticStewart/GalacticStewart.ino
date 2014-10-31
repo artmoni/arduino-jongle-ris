@@ -194,7 +194,7 @@ void readTagsRemote()
         displayStatusOK(name,"Golden");
       }   
       else if (code.compareTo("G2")==0){
-        displayStatusError(name,"Elu");
+        displayStatusOK(name,"Elu");
       }
 
     Serial.flush();
@@ -299,9 +299,9 @@ void displayStatusOK(String name, String description){
   // digitalWrite(PIN_GREEN, HIGH);
   lcd.clear();
   lcd.setCursor(0, 0);
-  lcd.print(name);
-  lcd.setCursor(0, 1);
   lcd.print(description);
+  lcd.setCursor(0, 1);
+  lcd.print(name);
   tone(3,NOTE_D8,1000);
 
   costume.turnONShoulder(COLOR_BLUE); 
@@ -314,9 +314,9 @@ void displayStatusWarning(String name, String description){
   // digitalWrite(PIN_GREEN, HIGH);
   lcd.clear();
   lcd.setCursor(0, 0);
-  lcd.print(name);
-  lcd.setCursor(0, 1);
   lcd.print(description);
+  lcd.setCursor(0, 1);
+  lcd.print(name);
 
   tone(3,NOTE_C3,700);
 
