@@ -32,7 +32,7 @@ void GalacticServer::initConnection(){
 }
 
 
-void GalacticServer::startConnection(String restAPI){
+void GalacticServer::startConnectionGET(String restAPI){
   if (DEBUG)
 
     Serial.println("connecting...");
@@ -47,6 +47,30 @@ void GalacticServer::startConnection(String restAPI){
     client.println("Host: StarShipInterface");
     client.println("Connection: close");
     client.println();
+  }
+  else {
+    // kf you didn't get a connection to the server:
+    if (DEBUG)
+      Serial.println("connection failed");
+  }
+}
+void GalacticServer::startConnectionPOST(String restAPI,String data){
+  if (DEBUG)
+
+    Serial.println("connecting...");
+
+  // if you get a connection, report back via serial:
+  if (client.connect(server, 80)) {
+    if (DEBUG)
+
+      Serial.println("connected");
+    // Make a HTTP request:
+    client.println("POST "+restAPI+" HTTP/1.1");
+    client.println("Host: StarShipInterface");
+    client.println(F("Connection: close\r\nContent-Type: application/x-www-form-urlencoded"));
+    client.println();
+    client.println("Content-Length: %u\r\n"+strlen(data));
+    client.println(data);
   }
   else {
     // kf you didn't get a connection to the server:
@@ -75,7 +99,7 @@ void GalacticServer::endConnection()
 
 String GalacticServer::getPassengers()
 {
-  startConnection("/passenger");
+  startConnectionGET("/passenger");
   String passengersJSON="";
   // if there are incoming bytes available
   // from the server, read them and print them:
@@ -146,6 +170,60 @@ String GalacticServer::getPassenger(String rfid){
 }
 
 
+String GalacticServer::registerPassenger(String rfid){
+  startConnectionPOST("/golden","rfid="+rfid);
+  String passengerJSON;
+  // if there are incoming bytes available
+  // from the server, read them and print them:
+  int connectLoop = 0;
+  boolean startRead=false;
+  while(client.connected())
+  {
+    while (client.available()) {
+      char c = client.read();
+      //Serial.print(c);
+      if (c == '{' ) { //'<' is our begining character
+        startRead = true; //Ready to start reading the part 
+        // passengerJSON= String(passengerJSON+'"');
+        passengerJSON= String(passengerJSON+c);
+
+      }
+      else if(startRead){
+
+        //if(c != '}'){
+        // if (c=='"')
+        //passengerJSON= String(passengerJSON+"\\");
+        passengerJSON= String(passengerJSON+c);
+        //}
+        //if (c=='}')
+        //        passengerJSON= String(passengerJSON+'"');
+
+      }
+      connectLoop = 0;  
+    }  
+
+    connectLoop++;
+
+    // if more than 10000 milliseconds since the last packet
+    if(connectLoop > 10000)
+    {
+      // then close the connection from this end.
+      if (DEBUG){
+        Serial.println();
+        Serial.println(F("Timeout"));
+      }
+      client.stop();
+    }
+    // this is a delay for the connectLoop timing
+    delay(1);
+  }
+
+
+  if (DEBUG)
+    Serial.println(passengerJSON);
+  endConnection();
+  return passengerJSON;
+}
 
 
 

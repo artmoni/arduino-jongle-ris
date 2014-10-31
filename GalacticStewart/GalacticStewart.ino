@@ -200,13 +200,7 @@ void readTagsRemote()
     Serial.flush();
 
   }
-  if (is_register){
-    displayStatusOK("Registering", "...");
-    //delay(500);
-    displayStatusError("Registering","...");
-    //delay(500);
-
-  }
+ 
 }
 
 long timeCheckRFID;
@@ -217,19 +211,22 @@ void loop()
   passengerID=0;
 
   passengerID=leftHand.readRFID();
-  if (passengerID!=0){
-    timeCheckRFID=millis();
-
-    if (passengerID ==master_key){
+  if (passengerID ==master_key){
       displayChecking("~ Master key ~","Promote to Golden");
       timeoutRegistering=millis();
       is_register=true;
     }
-    else{
+    else  if (passengerID!=0){
+    timeCheckRFID=millis();
+
+    if (is_register)
+       Serial.print("RG");
+else
+   Serial.print("CK");
       Serial.print(String(passengerID));       
       
       displayChecking("~ Checking Access ~",String(passengerID));
-    }
+    
     /*lcd.clear();
      lcd.setCursor(0, 1);
      lcd.print(String(passengerID));

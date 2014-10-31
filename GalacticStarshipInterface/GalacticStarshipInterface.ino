@@ -50,6 +50,8 @@ void setup() {
 }
 
 String scannedRFID="";
+String code="";
+
 void loop()
 {
 
@@ -59,53 +61,64 @@ void loop()
 
   if (Serial.available())
   {
-    scannedRFID="";
-    scannedRFID=Serial.readString();
+    String result=Serial.readString();
+
+    code = result.substring(0,2);
+    scannedRFID=result.substring(2);
   }
 
   if (scannedRFID != "")
 
   {    
-    resetStatusControl();
-    Serial.flush();
-    //Serial.println("RFID1="+scannedRFID);
-
-
-    Passenger passenger;
-    passenger= getPassenger(scannedRFID);
-    if (passenger.isGolden()==0){ 
-      //Serial.println(scannedRFID+" Bienvenue "+ passenger.getFirstname());
-      Serial.print("G0");
-      Serial.print(passenger.getFirstname());
-
-      displayStatusError();
-    }
-   else if (passenger.isGolden()==1){
-      //Serial.println(scannedRFID+" Seconde classe");
-      Serial.print("G1");
-      Serial.print(passenger.getFirstname());
-      displayStatusOK();
-    }
-    else if (passenger.isGolden()==2){
-      Serial.print("G2");
-      Serial.print(passenger.getFirstname());
-      displayStatusOK();
-    }
-    else{
-      Serial.print("GX");
-      Serial.print(passenger.getFirstname());
-    }
-    scannedRFID="";
+    if(code.compareTo("CK")==0)
+      returnPassenger(scannedRFID);  
+    else if (code.compareTo("RG")==0)
+      registerPassenger(scannedRFID);
+      scannedRFID="";
   }
-
-
-
-
 
 
 }
 
+void returnPassenger(String rfid){
+  resetStatusControl();
+  Serial.flush();
+  //Serial.println("RFID1="+scannedRFID);
 
+
+  Passenger passenger;
+  passenger= getPassenger(rfid);
+  if (passenger.isGolden()==0){ 
+    //Serial.println(scannedRFID+" Bienvenue "+ passenger.getFirstname());
+    Serial.print("G0");
+    Serial.print(passenger.getFirstname());
+
+    displayStatusError();
+  }
+  else if (passenger.isGolden()==1){
+    //Serial.println(scannedRFID+" Seconde classe");
+    Serial.print("G1");
+    Serial.print(passenger.getFirstname());
+    displayStatusOK();
+  }
+  else if (passenger.isGolden()==2){
+    Serial.print("G2");
+    Serial.print(passenger.getFirstname());
+    displayStatusOK();
+  }
+  else{
+    Serial.print("GX");
+    Serial.print(passenger.getFirstname());
+  }
+
+}
+
+
+void  registerPassenger(String rfid){
+  String json;
+  json=  starship.registerPassenger(rfid);
+
+}
 
 String getPassengers(){
   String json;
@@ -154,7 +167,7 @@ Passenger getPassenger(String rfidToCheck){
   passenger.setLastname(String(lastname));
   passenger.setRFID(String(rfid));
   passenger.setGolden(is_golden);
-   // Serial.println("Passenger isgolden="+String(is_golden)+" name"+rfid+" "+lastname+" "+firstname);
+  // Serial.println("Passenger isgolden="+String(is_golden)+" name"+rfid+" "+lastname+" "+firstname);
 
   return passenger;
 }
@@ -259,6 +272,7 @@ void readXbee(){
     Serial.write(Serial.read());
   }
 }
+
 
 
 

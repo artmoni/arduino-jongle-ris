@@ -11,8 +11,11 @@ public:
   void initConnection();
   String getPassengers();
   String getPassenger(String rfid);
+    String registerPassenger(String rfid);
+
   void endConnection();
-  void startConnection(String restAPI);
+  void startConnectionGET(String restAPI);
+void startConnectionPOST(String restAPI,String data);
 
 private:
   int _pin;
