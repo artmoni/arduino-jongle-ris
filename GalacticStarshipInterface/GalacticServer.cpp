@@ -69,7 +69,7 @@ void GalacticServer::startConnectionPOST(String restAPI,String data){
     client.println("Host: StarShipInterface");
     client.println(F("Connection: close\r\nContent-Type: application/x-www-form-urlencoded"));
     client.println();
-    client.println("Content-Length: %u\r\n"+strlen(data));
+    client.println("Content-Length: %u\r\n"+data.length());
     client.println(data);
   }
   else {
@@ -115,7 +115,7 @@ String GalacticServer::getPassengers()
 }
 
 String GalacticServer::getPassenger(String rfid){
-  startConnection("/passenger/"+rfid);
+  startConnectionGET("/passenger/"+rfid);
   String passengerJSON;
   // if there are incoming bytes available
   // from the server, read them and print them:
