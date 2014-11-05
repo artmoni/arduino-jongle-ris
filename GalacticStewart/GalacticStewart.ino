@@ -200,7 +200,7 @@ void readTagsRemote()
     Serial.flush();
 
   }
- 
+
 }
 
 long timeCheckRFID;
@@ -212,21 +212,21 @@ void loop()
 
   passengerID=leftHand.readRFID();
   if (passengerID ==master_key){
-      displayChecking("~ Master key ~","Promote to Golden");
-      timeoutRegistering=millis();
-      is_register=true;
-    }
-    else  if (passengerID!=0){
+    displayChecking("~ Master key ~","Promote to Golden");
+    timeoutRegistering=millis();
+    is_register=true;
+  }
+  else  if (passengerID!=0){
     timeCheckRFID=millis();
 
     if (is_register)
-       Serial.print("RG");
-else
-   Serial.print("CK");
-      Serial.print(String(passengerID));       
-      
-      displayChecking("~ Checking Access ~",String(passengerID));
-    
+      Serial.print("RG"+String(passengerID));
+    else
+      Serial.print("CK"+String(passengerID));
+    //Serial.print();       
+delay(100);
+    displayChecking(">Checking Access",String(passengerID));
+
     /*lcd.clear();
      lcd.setCursor(0, 1);
      lcd.print(String(passengerID));
@@ -251,8 +251,8 @@ else
 
 
   if (millis()-timeCheckRFID>=3000&&timeCheckRFID!=0){
-   // costume.turnOFFShoulder();
-  costume.lightOFFChecking();
+    // costume.turnOFFShoulder();
+    costume.lightOFFChecking();
     timeCheckRFID=0;
   }
   if (millis()-timeDisplayAccess>=3000&&timeDisplayAccess!=0){
@@ -264,7 +264,7 @@ else
     is_register=false;
     timeoutRegistering=0;
     lcd.clear();
-          //displayChecking("~ Master key ~","Timeout Registering");
+    //displayChecking("~ Master key ~","Timeout Registering");
 
   }
 }
@@ -335,6 +335,7 @@ void displayChecking(String line1, String description){
   timeDisplayAccess=millis();
 
 }
+
 
 
 
