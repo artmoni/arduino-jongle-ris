@@ -1,4 +1,4 @@
 arduino-jongle-ris
 ==================
 
-Project from La Compagnie Jongle&Ris! http://www.jongle-ris.org
+Arduino project to enlighten the costumes remotely by La Compagnie Jongle&Ris! http://www.jongle-ris.org
